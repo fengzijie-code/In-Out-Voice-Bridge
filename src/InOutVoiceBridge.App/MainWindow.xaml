@@ -1,0 +1,251 @@
+<Window x:Class="InOutVoiceBridge.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:InOutVoiceBridge.App.ViewModels"
+        xmlns:local="clr-namespace:InOutVoiceBridge.App"
+        Title="In Out Voice Bridge"
+        Width="520" Height="620"
+        MinWidth="460" MinHeight="550"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BackgroundBrush}">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <local:LevelToWidthConverter x:Key="LevelToWidth"/>
+
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="24,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="In Out Voice Bridge"
+                       Foreground="{StaticResource PrimaryBrush}"
+                       FontSize="22" FontWeight="Bold"/>
+            <TextBlock Text="Route one app's audio to your virtual microphone"
+                       Foreground="{StaticResource SubtextBrush}"
+                       FontSize="12" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <!-- Process Selection -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,8">
+            <DockPanel Margin="0,0,0,6">
+                <TextBlock Text="Select Music App"
+                           Style="{StaticResource SectionHeader}"
+                           DockPanel.Dock="Left"/>
+                <Button Content="Refresh"
+                        DockPanel.Dock="Right"
+                        HorizontalAlignment="Right"
+                        Command="{Binding RefreshProcessesCommand}"
+                        Background="Transparent"
+                        Foreground="{StaticResource PrimaryBrush}"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        FontSize="11"/>
+            </DockPanel>
+        </StackPanel>
+
+        <!-- Process List -->
+        <Border Grid.Row="2"
+                Background="{StaticResource SurfaceBrush}"
+                CornerRadius="8"
+                Padding="4"
+                Margin="0,0,0,12">
+            <ListBox ItemsSource="{Binding Processes}"
+                     SelectedItem="{Binding SelectedProcess}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Foreground="{StaticResource TextBrush}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="4,4">
+                            <TextBlock Text="&#x266B; " Foreground="{StaticResource PrimaryBrush}" FontSize="14" VerticalAlignment="Center"/>
+                            <StackPanel>
+                                <TextBlock Text="{Binding ProcessName}" FontSize="13" FontWeight="Medium" Foreground="{StaticResource TextBrush}"/>
+                                <TextBlock FontSize="10" Foreground="{StaticResource SubtextBrush}">
+                                    <Run Text="PID: "/><Run Text="{Binding ProcessId, Mode=OneWay}"/>
+                                    <Run Text=" | "/><Run Text="{Binding WindowTitle, Mode=OneWay}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="6,2"/>
+                        <Setter Property="Margin" Value="2"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Bd"
+                                            Background="Transparent"
+                                            CornerRadius="6"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#3D1DB954"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="#20FFFFFF"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
+        </Border>
+
+        <!-- Device Selection -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,12">
+            <TextBlock Text="Output to Virtual Cable"
+                       Style="{StaticResource SectionHeader}"/>
+            <ComboBox ItemsSource="{Binding OutputDevices}"
+                      SelectedItem="{Binding SelectedOutputDevice}"
+                      DisplayMemberPath="FriendlyName"
+                      FontSize="13"
+                      Padding="8,6"
+                      Background="{StaticResource SurfaceBrush}"
+                      Foreground="{StaticResource TextBrush}"
+                      BorderBrush="#40FFFFFF"
+                      BorderThickness="1"/>
+        </StackPanel>
+
+        <!-- Virtual Cable Warning -->
+        <Border Grid.Row="4"
+                Background="#30FAB387"
+                CornerRadius="6"
+                Padding="10,8"
+                Margin="0,0,0,12"
+                Visibility="{Binding ShowVirtualCableWarning, Converter={StaticResource BoolToVis}}">
+            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource WarningBrush}" FontSize="12">
+                <Run FontWeight="SemiBold">No virtual cable detected.</Run>
+                <LineBreak/>
+                <Run>Install VB-CABLE from https://vb-audio.com/Cable/ then click Refresh.</Run>
+                <LineBreak/>
+                <Run>After install, select "CABLE Input" as the output device above.</Run>
+            </TextBlock>
+        </Border>
+
+        <!-- Controls -->
+        <DockPanel Grid.Row="5" Margin="0,0,0,12">
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                <Button Content="START"
+                        Command="{Binding StartBridgeCommand}"
+                        Style="{StaticResource ActionButton}"
+                        Background="{StaticResource PrimaryBrush}"
+                        Foreground="White"
+                        Margin="0,0,8,0"
+                        Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVis}}"/>
+                <Button Content="STOP"
+                        Command="{Binding StopBridgeCommand}"
+                        Style="{StaticResource ActionButton}"
+                        Background="{StaticResource ErrorBrush}"
+                        Foreground="White"
+                        Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
+
+            <!-- Level Meters -->
+            <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <DockPanel Margin="0,0,0,4">
+                    <TextBlock Text="Capture:" Foreground="{StaticResource SubtextBrush}" FontSize="11" Width="55"/>
+                    <Border Background="#20FFFFFF" CornerRadius="3" Height="12" Width="120">
+                        <Border Background="{StaticResource PrimaryBrush}" CornerRadius="3" HorizontalAlignment="Left"
+                                Width="{Binding CaptureLevel, Converter={StaticResource LevelToWidth}}"/>
+                    </Border>
+                    <TextBlock Text="{Binding CaptureLevelDb}" Foreground="{StaticResource SubtextBrush}" FontSize="10" Margin="6,0,0,0" Width="55"/>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock Text="Render:" Foreground="{StaticResource SubtextBrush}" FontSize="11" Width="55"/>
+                    <Border Background="#20FFFFFF" CornerRadius="3" Height="12" Width="120">
+                        <Border Background="#89B4FA" CornerRadius="3" HorizontalAlignment="Left"
+                                Width="{Binding RenderLevel, Converter={StaticResource LevelToWidth}}"/>
+                    </Border>
+                    <TextBlock Text="{Binding RenderLevelDb}" Foreground="{StaticResource SubtextBrush}" FontSize="10" Margin="6,0,0,0" Width="55"/>
+                </DockPanel>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="6"
+                Background="{StaticResource SurfaceBrush}"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,8">
+            <DockPanel>
+                <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <Setter Property="Fill" Value="{StaticResource SubtextBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                    <Setter Property="Fill" Value="{StaticResource PrimaryBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+                <TextBlock Text="{Binding StatusText}"
+                           Foreground="{StaticResource TextBrush}"
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+
+        <!-- Error Display -->
+        <Border Grid.Row="7"
+                Background="#30F38BA8"
+                CornerRadius="6"
+                Padding="10,8"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{StaticResource ErrorBrush}"
+                       FontSize="11"
+                       TextWrapping="Wrap"/>
+        </Border>
+    </Grid>
+</Window>
