@@ -7,6 +7,7 @@
 #include <avrt.h>
 #include <cmath>
 #include <cstdio>
+#include <vector>
 
 #pragma comment(lib, "avrt.lib")
 
@@ -182,18 +183,15 @@ HRESULT ProcessLoopbackCapture::Start(DWORD processId, RingBuffer* ringBuffer) {
 
     m_captureFormat = *formatToUse;
 
+    DbgLog(L"Initialize flags=AUDCLNT_STREAMFLAGS_LOOPBACK duration=0 periodicity=0");
     hr = m_audioClient->Initialize(
         AUDCLNT_SHAREMODE_SHARED,
-        AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+        AUDCLNT_STREAMFLAGS_LOOPBACK,
         0, 0, formatToUse, nullptr);
     DbgLog(L"IAudioClient::Initialize", hr);
 
     CoTaskMemFree(mixFormat);
     if (closestMatch) CoTaskMemFree(closestMatch);
-    if (FAILED(hr)) return hr;
-
-    hr = m_audioClient->SetEventHandle(m_captureEvent);
-    DbgLog(L"SetEventHandle", hr);
     if (FAILED(hr)) return hr;
 
     hr = m_audioClient->GetService(__uuidof(IAudioCaptureClient), (void**)&m_captureClient);
@@ -236,9 +234,7 @@ void ProcessLoopbackCapture::CaptureThread() {
     HANDLE avrtHandle = AvSetMmThreadCharacteristicsW(L"Pro Audio", &taskIndex);
 
     while (m_capturing.load()) {
-        DWORD waitResult = WaitForSingleObject(m_captureEvent, 100);
-        if (!m_capturing.load()) break;
-        if (waitResult != WAIT_OBJECT_0) continue;
+        Sleep(10);
 
         UINT32 packetLength = 0;
         while (SUCCEEDED(m_captureClient->GetNextPacketSize(&packetLength)) && packetLength > 0) {
