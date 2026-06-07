@@ -11,7 +11,13 @@
 
     <RootNamespace>InOutVoiceBridge.App</RootNamespace>
     <AssemblyName>InOutVoiceBridge</AssemblyName>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\AppIcon.ico" />
+    <Resource Include="Assets\AppIcon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />

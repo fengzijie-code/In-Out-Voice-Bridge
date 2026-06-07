@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:InOutVoiceBridge.App.ViewModels"
         xmlns:local="clr-namespace:InOutVoiceBridge.App"
         Title="In Out Voice Bridge"
+        Icon="Assets/AppIcon.ico"
         Width="560" Height="700"
         MinWidth="500" MinHeight="640"
         WindowStartupLocation="CenterScreen"
