@@ -22,4 +22,17 @@ internal static class NativeBridge
 
     [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
     public static extern int Bridge_GetState(out int state);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    public static extern int Bridge_StartMic(
+        [MarshalAs(UnmanagedType.LPWStr)] string micDeviceId);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    public static extern int Bridge_StopMic();
+
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    public static extern int Bridge_SetMicGainDb(float gainDb);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    public static extern int Bridge_GetMicLevel(out float micRms);
 }

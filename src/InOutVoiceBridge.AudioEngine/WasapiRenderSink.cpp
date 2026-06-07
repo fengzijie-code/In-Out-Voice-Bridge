@@ -43,6 +43,26 @@ void WasapiRenderSink::SetGainDb(float gainDb) {
     m_gainLinear.store(linear, std::memory_order_release);
 }
 
+void WasapiRenderSink::SetMicSource(RingBuffer* micRingBuffer, const WAVEFORMATEX* micFormat) {
+    if (micFormat) {
+        m_micSourceFormat = *micFormat;
+        m_micFormatSet.store(true, std::memory_order_release);
+    }
+    m_micRingBuffer.store(micRingBuffer, std::memory_order_release);
+}
+
+void WasapiRenderSink::ClearMicSource() {
+    m_micRingBuffer.store(nullptr, std::memory_order_release);
+    m_micFormatSet.store(false, std::memory_order_release);
+}
+
+void WasapiRenderSink::SetMicGainDb(float gainDb) {
+    if (!std::isfinite(gainDb)) gainDb = 0.0f;
+    gainDb = std::clamp(gainDb, MinGainDb, MaxGainDb);
+    float linear = std::pow(10.0f, gainDb / 20.0f);
+    m_micGainLinear.store(linear, std::memory_order_release);
+}
+
 HRESULT WasapiRenderSink::Start(LPCWSTR deviceId, const WAVEFORMATEX* sourceFormat, RingBuffer* ringBuffer) {
     if (m_rendering.load()) return E_FAIL;
     m_ringBuffer = ringBuffer;
@@ -79,6 +99,14 @@ HRESULT WasapiRenderSink::Start(LPCWSTR deviceId, const WAVEFORMATEX* sourceForm
 
     hr = m_audioClient->GetService(__uuidof(IAudioRenderClient), (void**)&m_renderClient);
     if (FAILED(hr)) return hr;
+
+    {
+        UINT32 bufFrames = 0;
+        m_audioClient->GetBufferSize(&bufFrames);
+        size_t maxBytes = bufFrames * m_renderFormat.nBlockAlign;
+        m_micReadBuf.resize(maxBytes, 0);
+        m_micConvertBuf.resize(maxBytes, 0);
+    }
 
     m_rendering.store(true);
     hr = m_audioClient->Start();
@@ -164,7 +192,40 @@ void WasapiRenderSink::RenderThread() {
         if (bytesRead > 0 && m_renderFormat.wBitsPerSample == 32) {
             float gain = m_gainLinear.load(std::memory_order_acquire);
             ApplyGainFloat32(renderBuffer, bytesRead, gain);
-            size_t sampleCount = bytesRead / sizeof(float);
+        }
+
+        RingBuffer* micRb = m_micRingBuffer.load(std::memory_order_acquire);
+        if (micRb && m_micFormatSet.load(std::memory_order_acquire) && m_renderFormat.wBitsPerSample == 32) {
+            bool micFmtMatch = AudioFormatConverter::FormatsMatch(&m_micSourceFormat, &m_renderFormat);
+            size_t micBytesRead = 0;
+
+            if (micFmtMatch) {
+                micBytesRead = micRb->Read(m_micReadBuf.data(), bytesNeeded);
+            } else {
+                size_t micFrameSize = m_micSourceFormat.nBlockAlign;
+                size_t micSrcBytes = numFramesAvailable * micFrameSize;
+                if (micSrcBytes > m_micConvertBuf.size()) micSrcBytes = m_micConvertBuf.size();
+                size_t micSrcRead = micRb->Read(m_micConvertBuf.data(), micSrcBytes);
+                if (micSrcRead > 0) {
+                    AudioFormatConverter::ConvertBuffer(
+                        m_micConvertBuf.data(), micSrcRead, &m_micSourceFormat,
+                        m_micReadBuf.data(), bytesNeeded, &m_renderFormat, &micBytesRead);
+                }
+            }
+
+            if (micBytesRead > 0) {
+                float micGain = m_micGainLinear.load(std::memory_order_acquire);
+                float* renderSamples = reinterpret_cast<float*>(renderBuffer);
+                const float* micSamples = reinterpret_cast<const float*>(m_micReadBuf.data());
+                size_t mixSamples = (std::min)(bytesNeeded, micBytesRead) / sizeof(float);
+                for (size_t i = 0; i < mixSamples; ++i) {
+                    renderSamples[i] = std::clamp(renderSamples[i] + micSamples[i] * micGain, -1.0f, 1.0f);
+                }
+            }
+        }
+
+        if (bytesRead > 0 && m_renderFormat.wBitsPerSample == 32) {
+            size_t sampleCount = bytesNeeded / sizeof(float);
             float rms = AudioFormatConverter::CalculateRms(
                 reinterpret_cast<const float*>(renderBuffer), sampleCount);
             m_rmsLevel.store(rms);

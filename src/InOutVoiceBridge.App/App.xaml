@@ -17,6 +17,7 @@
             <Color x:Key="WarningColor">#FAB387</Color>
             <Color x:Key="RenderColor">#89B4FA</Color>
             <Color x:Key="InputBorderColor">#4B4B68</Color>
+            <Color x:Key="MicColor">#F9E2AF</Color>
 
             <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
             <SolidColorBrush x:Key="PrimaryHoverBrush" Color="{StaticResource PrimaryHoverColor}"/>
@@ -31,6 +32,7 @@
             <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
             <SolidColorBrush x:Key="RenderBrush" Color="{StaticResource RenderColor}"/>
             <SolidColorBrush x:Key="InputBorderBrush" Color="{StaticResource InputBorderColor}"/>
+            <SolidColorBrush x:Key="MicBrush" Color="{StaticResource MicColor}"/>
             <SolidColorBrush x:Key="HoverBrush" Color="#20FFFFFF"/>
             <SolidColorBrush x:Key="PressedBrush" Color="#14000000"/>
             <SolidColorBrush x:Key="SelectedBrush" Color="#3D1DB954"/>

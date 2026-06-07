@@ -73,12 +73,14 @@
     <ClCompile Include="ProcessLoopbackCapture.cpp" />
     <ClCompile Include="WasapiRenderSink.cpp" />
     <ClCompile Include="AudioFormatConverter.cpp" />
+    <ClCompile Include="MicCapture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProcessLoopbackCapture.h" />
     <ClInclude Include="WasapiRenderSink.h" />
     <ClInclude Include="RingBuffer.h" />
     <ClInclude Include="AudioFormatConverter.h" />
+    <ClInclude Include="MicCapture.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

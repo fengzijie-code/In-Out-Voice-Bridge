@@ -2,6 +2,7 @@
 #include <combaseapi.h>
 #include "ProcessLoopbackCapture.h"
 #include "WasapiRenderSink.h"
+#include "MicCapture.h"
 #include "RingBuffer.h"
 
 #include <mutex>
@@ -15,6 +16,10 @@ static std::unique_ptr<ProcessLoopbackCapture> g_capture;
 static std::unique_ptr<WasapiRenderSink> g_render;
 static std::unique_ptr<RingBuffer> g_ringBuffer;
 static float g_gainDb = 0.0f;
+
+static std::unique_ptr<MicCapture> g_micCapture;
+static std::unique_ptr<RingBuffer> g_micRingBuffer;
+static float g_micGainDb = 0.0f;
 
 enum class BridgeState : int {
     Stopped = 0,
@@ -93,6 +98,11 @@ __declspec(dllexport) HRESULT __stdcall Bridge_Start(DWORD targetPid, LPCWSTR re
 __declspec(dllexport) HRESULT __stdcall Bridge_Stop() {
     std::lock_guard<std::mutex> lock(g_mutex);
 
+    if (g_render) g_render->ClearMicSource();
+    if (g_micCapture) g_micCapture->Stop();
+    g_micCapture.reset();
+    g_micRingBuffer.reset();
+
     if (g_capture) g_capture->Stop();
     if (g_render) g_render->Stop();
 
@@ -126,6 +136,72 @@ __declspec(dllexport) HRESULT __stdcall Bridge_GetLevels(float* captureRms, floa
 __declspec(dllexport) HRESULT __stdcall Bridge_GetState(int* state) {
     if (!state) return E_POINTER;
     *state = static_cast<int>(g_state);
+    return S_OK;
+}
+
+__declspec(dllexport) HRESULT __stdcall Bridge_StartMic(LPCWSTR micDeviceId) {
+    std::lock_guard<std::mutex> lock(g_mutex);
+
+    BridgeLog(L"Bridge_StartMic called");
+    if (g_state != BridgeState::Running) return E_FAIL;
+    if (!g_render) return E_FAIL;
+
+    if (g_micCapture) {
+        g_render->ClearMicSource();
+        g_micCapture->Stop();
+        g_micCapture.reset();
+        g_micRingBuffer.reset();
+    }
+
+    constexpr size_t BUFFER_SIZE = 48000 * 2 * sizeof(float) / 10;
+    g_micRingBuffer = std::make_unique<RingBuffer>(BUFFER_SIZE);
+    g_micCapture = std::make_unique<MicCapture>();
+
+    WAVEFORMATEX renderFormat = g_render->GetRenderFormat();
+    HRESULT hr = g_micCapture->Start(micDeviceId, &renderFormat, g_micRingBuffer.get());
+    BridgeLog(L"micCapture->Start returned", hr);
+    if (FAILED(hr)) {
+        g_micCapture.reset();
+        g_micRingBuffer.reset();
+        return hr;
+    }
+
+    WAVEFORMATEX micFormat = g_micCapture->GetCaptureFormat();
+    g_render->SetMicSource(g_micRingBuffer.get(), &micFormat);
+    g_render->SetMicGainDb(g_micGainDb);
+
+    BridgeLog(L"Bridge_StartMic success");
+    return S_OK;
+}
+
+__declspec(dllexport) HRESULT __stdcall Bridge_StopMic() {
+    std::lock_guard<std::mutex> lock(g_mutex);
+
+    if (g_render) g_render->ClearMicSource();
+    if (g_micCapture) g_micCapture->Stop();
+    g_micCapture.reset();
+    g_micRingBuffer.reset();
+
+    BridgeLog(L"Bridge_StopMic");
+    return S_OK;
+}
+
+__declspec(dllexport) HRESULT __stdcall Bridge_SetMicGainDb(float gainDb) {
+    std::lock_guard<std::mutex> lock(g_mutex);
+
+    g_micGainDb = NormalizeGainDb(gainDb);
+    if (g_render) {
+        g_render->SetMicGainDb(g_micGainDb);
+    }
+    BridgeLog(L"Bridge_SetMicGainDb", S_OK);
+    return S_OK;
+}
+
+__declspec(dllexport) HRESULT __stdcall Bridge_GetMicLevel(float* micRms) {
+    if (!micRms) return E_POINTER;
+
+    std::lock_guard<std::mutex> lock(g_mutex);
+    *micRms = g_micCapture ? g_micCapture->GetRmsLevel() : 0.0f;
     return S_OK;
 }
 

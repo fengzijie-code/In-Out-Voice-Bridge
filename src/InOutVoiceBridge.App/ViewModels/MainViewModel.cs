@@ -18,6 +18,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     public MainViewModel()
     {
         _bridge.LevelsUpdated += OnLevelsUpdated;
+        _bridge.MicLevelUpdated += OnMicLevelUpdated;
         _bridge.StateChanged += OnStateChanged;
         _bridge.ErrorOccurred += OnErrorOccurred;
 
@@ -27,6 +28,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         RefreshProcesses();
         RefreshDevices();
+        RefreshMicDevices();
     }
 
     [ObservableProperty]
@@ -81,6 +83,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private double _lastValidGainDb = 0.0;
 
+    [ObservableProperty]
+    private ObservableCollection<AudioDeviceInfo> _micDevices = [];
+
+    [ObservableProperty]
+    private AudioDeviceInfo? _selectedMicDevice;
+
+    [ObservableProperty]
+    private bool _isMicEnabled;
+
+    [ObservableProperty]
+    private double _micLevel;
+
+    [ObservableProperty]
+    private string _micLevelDb = "-inf dB";
+
+    [ObservableProperty]
+    private string _micGainDbText = "0";
+
+    [ObservableProperty]
+    private string _micGainValidationMessage = "";
+
+    [ObservableProperty]
+    private bool _hasMicGainValidationError;
+
+    private double _lastValidMicGainDb = 0.0;
+
     partial void OnGainDbTextChanged(string value)
     {
         if (TryParseGainDb(value, out double gainDb))
@@ -94,6 +122,64 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             HasGainValidationError = true;
             GainValidationMessage = "Enter a number from -60 to +20 dB";
+        }
+    }
+
+    partial void OnMicGainDbTextChanged(string value)
+    {
+        if (TryParseGainDb(value, out double gainDb))
+        {
+            _lastValidMicGainDb = gainDb;
+            HasMicGainValidationError = false;
+            MicGainValidationMessage = "";
+            _bridge.SetMicGainDb(gainDb);
+        }
+        else
+        {
+            HasMicGainValidationError = true;
+            MicGainValidationMessage = "Enter a number from -60 to +20 dB";
+        }
+    }
+
+    partial void OnIsMicEnabledChanged(bool value)
+    {
+        if (value)
+        {
+            if (SelectedMicDevice == null || !IsRunning)
+            {
+                IsMicEnabled = false;
+                return;
+            }
+            bool success = _bridge.StartMic(SelectedMicDevice.Id);
+            if (!success)
+            {
+                IsMicEnabled = false;
+            }
+            else
+            {
+                _bridge.SetMicGainDb(_lastValidMicGainDb);
+            }
+        }
+        else
+        {
+            _bridge.StopMic();
+        }
+    }
+
+    partial void OnSelectedMicDeviceChanged(AudioDeviceInfo? value)
+    {
+        if (IsMicEnabled && value != null && IsRunning)
+        {
+            _bridge.StopMic();
+            bool success = _bridge.StartMic(value.Id);
+            if (!success)
+            {
+                IsMicEnabled = false;
+            }
+            else
+            {
+                _bridge.SetMicGainDb(_lastValidMicGainDb);
+            }
         }
     }
 
@@ -126,6 +212,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         if (SelectedOutputDevice == null)
         {
             SelectedOutputDevice = OutputDevices.FirstOrDefault(d => d.IsLikelyVirtualCable);
+        }
+    }
+
+    [RelayCommand]
+    private void RefreshMicDevices()
+    {
+        var current = SelectedMicDevice;
+        var devices = _deviceService.GetCaptureDevices();
+        MicDevices = new ObservableCollection<AudioDeviceInfo>(devices);
+
+        if (current != null)
+        {
+            SelectedMicDevice = MicDevices.FirstOrDefault(d => d.Id == current.Id);
+        }
+
+        if (SelectedMicDevice == null)
+        {
+            SelectedMicDevice = MicDevices.FirstOrDefault();
         }
     }
 
@@ -163,6 +267,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RenderLevelDb = RmsToDbString(renderRms);
     }
 
+    private void OnMicLevelUpdated(float micRms)
+    {
+        MicLevel = Math.Clamp(micRms * 5.0, 0, 1);
+        MicLevelDb = RmsToDbString(micRms);
+    }
+
     private void OnStateChanged(BridgeState state)
     {
         IsRunning = state == BridgeState.Running;
@@ -174,6 +284,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RenderLevel = 0;
             CaptureLevelDb = "-inf dB";
             RenderLevelDb = "-inf dB";
+            MicLevel = 0;
+            MicLevelDb = "-inf dB";
+            IsMicEnabled = false;
         }
     }
 

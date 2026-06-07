@@ -31,6 +31,25 @@ public class AudioDeviceService
         return result;
     }
 
+    public List<AudioDeviceInfo> GetCaptureDevices()
+    {
+        var result = new List<AudioDeviceInfo>();
+
+        try
+        {
+            using var enumerator = new MMDeviceEnumerator();
+            var devices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+
+            foreach (var device in devices)
+            {
+                result.Add(new AudioDeviceInfo(device.ID, device.FriendlyName, false));
+            }
+        }
+        catch { }
+
+        return result;
+    }
+
     public bool HasVirtualCable()
     {
         return GetRenderDevices().Any(d => d.IsLikelyVirtualCable);

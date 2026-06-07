@@ -5,8 +5,8 @@
         xmlns:local="clr-namespace:InOutVoiceBridge.App"
         Title="In Out Voice Bridge"
         Icon="Assets/AppIcon.ico"
-        Width="560" Height="700"
-        MinWidth="500" MinHeight="640"
+        Width="560" Height="920"
+        MinWidth="500" MinHeight="720"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource WindowBackgroundBrush}">
 
@@ -154,6 +154,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -323,8 +324,57 @@
             </StackPanel>
         </Border>
 
+        <!-- Microphone Input -->
+        <Border Grid.Row="4" Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,6">
+                    <TextBlock Text="Microphone Input" Style="{StaticResource SectionHeader}" DockPanel.Dock="Left"/>
+                    <CheckBox IsChecked="{Binding IsMicEnabled}"
+                              Content="Enable"
+                              Foreground="{StaticResource TextBrush}"
+                              DockPanel.Dock="Right"
+                              HorizontalAlignment="Right"
+                              VerticalAlignment="Center"
+                              IsEnabled="{Binding IsRunning}"/>
+                </DockPanel>
+
+                <TextBlock Text="Select your microphone to mix voice with music"
+                           Foreground="{StaticResource SubtextBrush}" FontSize="11" Margin="0,0,0,6"/>
+                <DockPanel Margin="0,0,0,0">
+                    <Button Content="Refresh"
+                            DockPanel.Dock="Right"
+                            HorizontalAlignment="Right"
+                            Command="{Binding RefreshMicDevicesCommand}"
+                            Style="{StaticResource GhostButton}"
+                            Margin="8,0,0,0"/>
+                    <ComboBox ItemsSource="{Binding MicDevices}"
+                              SelectedItem="{Binding SelectedMicDevice}"
+                              DisplayMemberPath="FriendlyName"
+                              Style="{StaticResource DarkComboBox}"/>
+                </DockPanel>
+
+                <TextBlock Text="Mic volume gain (+/- dB)"
+                           Style="{StaticResource SectionHeader}"
+                           Margin="0,12,0,6"/>
+                <DockPanel>
+                    <TextBox Text="{Binding MicGainDbText, UpdateSourceTrigger=PropertyChanged}"
+                             Width="84"
+                             Style="{StaticResource InputBox}"
+                             DockPanel.Dock="Left"/>
+                    <TextBlock Text="dB   0 = default, range -60 to +20"
+                               Style="{StaticResource TinyLabel}"
+                               Margin="8,0,0,0"/>
+                </DockPanel>
+                <TextBlock Text="{Binding MicGainValidationMessage}"
+                           Foreground="{StaticResource ErrorBrush}"
+                           FontSize="11"
+                           Margin="0,5,0,0"
+                           Visibility="{Binding HasMicGainValidationError, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
+        </Border>
+
         <!-- Virtual Cable Warning -->
-        <Border Grid.Row="4"
+        <Border Grid.Row="5"
                 Background="{StaticResource WarningBackgroundBrush}"
                 BorderBrush="#55FAB387"
                 BorderThickness="1"
@@ -345,7 +395,7 @@
         </Border>
 
         <!-- Controls -->
-        <DockPanel Grid.Row="5" Margin="0,0,0,12">
+        <DockPanel Grid.Row="6" Margin="0,0,0,12">
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
                 <Button Content="START"
                         Command="{Binding StartBridgeCommand}"
@@ -379,12 +429,21 @@
                         </Border>
                         <TextBlock Text="{Binding RenderLevelDb}" Style="{StaticResource TinyLabel}" Margin="7,0,0,0" Width="55"/>
                     </DockPanel>
+                    <DockPanel Margin="0,5,0,0"
+                               Visibility="{Binding IsMicEnabled, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Mic" Style="{StaticResource TinyLabel}" Width="56"/>
+                        <Border Background="{StaticResource MeterTrackBrush}" CornerRadius="4" Height="14" Width="120">
+                            <Border Background="{StaticResource MicBrush}" CornerRadius="4" HorizontalAlignment="Left"
+                                    Width="{Binding MicLevel, Converter={StaticResource LevelToWidth}}"/>
+                        </Border>
+                        <TextBlock Text="{Binding MicLevelDb}" Style="{StaticResource TinyLabel}" Margin="7,0,0,0" Width="55"/>
+                    </DockPanel>
                 </StackPanel>
             </Border>
         </DockPanel>
 
         <!-- Status Bar -->
-        <Border Grid.Row="6"
+        <Border Grid.Row="7"
                 Style="{StaticResource CardBorder}"
                 Padding="12,9"
                 Margin="0,0,0,8">
@@ -410,7 +469,7 @@
         </Border>
 
         <!-- Error Display -->
-        <Border Grid.Row="7"
+        <Border Grid.Row="8"
                 Background="{StaticResource ErrorBackgroundBrush}"
                 BorderBrush="#55F38BA8"
                 BorderThickness="1"

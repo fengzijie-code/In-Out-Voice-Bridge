@@ -17,6 +17,7 @@ public class BridgeController : IDisposable
     private uint _currentPid;
 
     public event Action<float, float>? LevelsUpdated;
+    public event Action<float>? MicLevelUpdated;
     public event Action<BridgeState>? StateChanged;
     public event Action<string>? ErrorOccurred;
 
@@ -65,6 +66,38 @@ public class BridgeController : IDisposable
         return true;
     }
 
+    public bool StartMic(string micDeviceId)
+    {
+        int hr = NativeBridge.Bridge_StartMic(micDeviceId);
+        if (hr < 0)
+        {
+            ErrorOccurred?.Invoke($"Failed to start mic (HRESULT: 0x{hr:X8}).");
+            return false;
+        }
+        return true;
+    }
+
+    public void StopMic()
+    {
+        NativeBridge.Bridge_StopMic();
+        MicLevelUpdated?.Invoke(0);
+    }
+
+    public bool SetMicGainDb(double gainDb)
+    {
+        if (double.IsNaN(gainDb) || double.IsInfinity(gainDb))
+            return false;
+
+        double clamped = Math.Clamp(gainDb, -60.0, 20.0);
+        int hr = NativeBridge.Bridge_SetMicGainDb((float)clamped);
+        if (hr < 0)
+        {
+            ErrorOccurred?.Invoke($"Failed to set mic gain (HRESULT: 0x{hr:X8}).");
+            return false;
+        }
+        return true;
+    }
+
     public void Stop()
     {
         _levelTimer?.Stop();
@@ -74,6 +107,7 @@ public class BridgeController : IDisposable
         CurrentState = BridgeState.Stopped;
         StateChanged?.Invoke(CurrentState);
         LevelsUpdated?.Invoke(0, 0);
+        MicLevelUpdated?.Invoke(0);
     }
 
     private void OnLevelTimerTick(object? sender, EventArgs e)
@@ -99,6 +133,9 @@ public class BridgeController : IDisposable
 
         NativeBridge.Bridge_GetLevels(out float captureRms, out float renderRms);
         LevelsUpdated?.Invoke(captureRms, renderRms);
+
+        NativeBridge.Bridge_GetMicLevel(out float micRms);
+        MicLevelUpdated?.Invoke(micRms);
     }
 
     public void Dispose()
