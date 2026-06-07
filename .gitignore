@@ -4,3 +4,4 @@ Debug/
 Release/
 .vs/
 publish/
+*.cache
