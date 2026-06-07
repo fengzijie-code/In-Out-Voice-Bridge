@@ -27,7 +27,14 @@ In Out Voice Bridge sends captured audio to "CABLE Input", and you select "CABLE
 1. Launch **In Out Voice Bridge**
 2. Select your music app from the process list
 3. Select **CABLE Input (VB-Audio Virtual Cable)** as the output device
-4. Click **START**
+4. Adjust the **volume gain** if needed:
+   - `0` dB = default (no change)
+   - Negative values (e.g. `-6`) = quieter
+   - Positive values (e.g. `+3`) = louder
+   - Valid range: -60 to +20 dB
+5. Click **START**
+6. The **Capture** meter shows the raw audio level from the selected app
+7. The **Render** meter shows the post-gain level being sent to the virtual cable
 
 ## Selecting the Virtual Microphone in Other Apps
 
@@ -51,11 +58,18 @@ In Out Voice Bridge sends captured audio to "CABLE Input", and you select "CABLE
 
 ### No audio comes through
 - Make sure the music app is actually playing audio
-- Verify CABLE Input is selected in In Out Voice Bridge
-- Check that CABLE Output is selected as microphone in your target app
+- Verify **CABLE Input** is selected in In Out Voice Bridge
+- Check that **CABLE Output** is selected as microphone in your target app
+- Try clicking **Refresh** in In Out Voice Bridge to re-detect processes
 - Try restarting In Out Voice Bridge
 
+### Audio is too quiet or too loud
+- Adjust the **volume gain** field in In Out Voice Bridge
+- Use negative dB values to reduce volume, positive to boost
+- The render meter shows the actual level being sent — aim for consistent activity without clipping
+
 ### Audio is distorted or choppy
+- If gain is set too high, audio may clip — try reducing the dB value
 - Close other audio-intensive applications
 - Check that your system sample rate matches (usually 48000 Hz)
 - Open **Sound Control Panel** > **CABLE Input** > **Properties** > **Advanced** and set to 48000 Hz
@@ -64,3 +78,8 @@ In Out Voice Bridge sends captured audio to "CABLE Input", and you select "CABLE
 - Reinstall VB-CABLE as Administrator
 - Restart your computer
 - Check Device Manager for disabled audio devices
+
+### App shows "No virtual cable detected"
+- Install VB-CABLE following the steps above
+- Click **Refresh** in In Out Voice Bridge after installing
+- The app auto-detects devices with names containing "CABLE", "Virtual", or "VB-Audio"
