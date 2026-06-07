@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -69,6 +70,33 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _showVirtualCableWarning;
 
+    [ObservableProperty]
+    private string _gainDbText = "0";
+
+    [ObservableProperty]
+    private string _gainValidationMessage = "";
+
+    [ObservableProperty]
+    private bool _hasGainValidationError;
+
+    private double _lastValidGainDb = 0.0;
+
+    partial void OnGainDbTextChanged(string value)
+    {
+        if (TryParseGainDb(value, out double gainDb))
+        {
+            _lastValidGainDb = gainDb;
+            HasGainValidationError = false;
+            GainValidationMessage = "";
+            _bridge.SetGainDb(gainDb);
+        }
+        else
+        {
+            HasGainValidationError = true;
+            GainValidationMessage = "Enter a number from -60 to +20 dB";
+        }
+    }
+
     [RelayCommand]
     private void RefreshProcesses()
     {
@@ -114,6 +142,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         bool success = await _bridge.StartAsync(SelectedProcess.ProcessId, SelectedOutputDevice.Id);
         if (success)
         {
+            _bridge.SetGainDb(_lastValidGainDb);
             StatusText = $"Bridging: {SelectedProcess.ProcessName} -> {SelectedOutputDevice.FriendlyName}";
         }
     }
@@ -152,6 +181,20 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         HasError = true;
         ErrorMessage = message;
+    }
+
+    private static bool TryParseGainDb(string text, out double gainDb)
+    {
+        gainDb = 0.0;
+        if (string.IsNullOrWhiteSpace(text)) return false;
+
+        if (!double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out gainDb))
+            return false;
+
+        if (double.IsNaN(gainDb) || double.IsInfinity(gainDb))
+            return false;
+
+        return gainDb >= -60.0 && gainDb <= 20.0;
     }
 
     private static string RmsToDbString(float rms)

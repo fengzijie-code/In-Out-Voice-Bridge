@@ -4,10 +4,10 @@
         xmlns:vm="clr-namespace:InOutVoiceBridge.App.ViewModels"
         xmlns:local="clr-namespace:InOutVoiceBridge.App"
         Title="In Out Voice Bridge"
-        Width="520" Height="620"
-        MinWidth="460" MinHeight="550"
+        Width="560" Height="700"
+        MinWidth="500" MinHeight="640"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BackgroundBrush}">
+        Background="{StaticResource WindowBackgroundBrush}">
 
     <Window.DataContext>
         <vm:MainViewModel/>
@@ -18,6 +18,8 @@
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
         <local:LevelToWidthConverter x:Key="LevelToWidth"/>
 
+        <DropShadowEffect x:Key="SoftShadow" BlurRadius="22" ShadowDepth="0" Opacity="0.28" Color="#000000"/>
+
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
             <Setter Property="FontSize" Value="13"/>
@@ -25,20 +27,121 @@
             <Setter Property="Margin" Value="0,0,0,6"/>
         </Style>
 
-        <Style x:Key="ActionButton" TargetType="Button">
-            <Setter Property="FontSize" Value="14"/>
+        <Style x:Key="TinyLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource SubtextBrush}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Padding" Value="14"/>
+        </Style>
+
+        <Style x:Key="InputBox" TargetType="TextBox">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DarkComboBox" TargetType="ComboBox">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style x:Key="GhostButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="24,10"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="6"
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource HoverBrush}"/>
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource PressedBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="28,12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.72"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -57,39 +160,77 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Title -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="In Out Voice Bridge"
-                       Foreground="{StaticResource PrimaryBrush}"
-                       FontSize="22" FontWeight="Bold"/>
-            <TextBlock Text="Route one app's audio to your virtual microphone"
-                       Foreground="{StaticResource SubtextBrush}"
-                       FontSize="12" Margin="0,2,0,0"/>
-        </StackPanel>
+        <!-- Header -->
+        <Border Grid.Row="0"
+                Style="{StaticResource CardBorder}"
+                Padding="16"
+                Margin="0,0,0,14"
+                Effect="{StaticResource SoftShadow}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Width="58" Height="58" CornerRadius="18" Margin="0,0,14,0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#1DB954" Offset="0"/>
+                            <GradientStop Color="#89B4FA" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <TextBlock Text="♪" FontSize="28" FontWeight="Bold" Foreground="White"
+                                   HorizontalAlignment="Left" VerticalAlignment="Center" Margin="13,0,0,0"/>
+                        <TextBlock Text="→" FontSize="24" FontWeight="Bold" Foreground="#EEFFFFFF"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,9,0"/>
+                    </Grid>
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="In Out Voice Bridge"
+                               Foreground="{StaticResource TextBrush}"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="Route one app's audio to your virtual microphone"
+                               Foreground="{StaticResource SubtextBrush}"
+                               FontSize="12"
+                               Margin="0,3,0,0"
+                               TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <Border Grid.Column="2"
+                        Background="#221DB954"
+                        BorderBrush="#551DB954"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="10,5"
+                        VerticalAlignment="Top">
+                    <TextBlock Text="LIVE AUDIO" Foreground="{StaticResource PrimaryBrush}" FontSize="10" FontWeight="Bold"/>
+                </Border>
+            </Grid>
+        </Border>
 
         <!-- Process Selection -->
-        <StackPanel Grid.Row="1" Margin="0,0,0,8">
-            <DockPanel Margin="0,0,0,6">
-                <TextBlock Text="Select Music App"
-                           Style="{StaticResource SectionHeader}"
-                           DockPanel.Dock="Left"/>
-                <Button Content="Refresh"
-                        DockPanel.Dock="Right"
-                        HorizontalAlignment="Right"
-                        Command="{Binding RefreshProcessesCommand}"
-                        Background="Transparent"
-                        Foreground="{StaticResource PrimaryBrush}"
-                        BorderThickness="0"
-                        Cursor="Hand"
-                        FontSize="11"/>
-            </DockPanel>
-        </StackPanel>
+        <DockPanel Grid.Row="1" Margin="0,0,0,8">
+            <StackPanel DockPanel.Dock="Left">
+                <TextBlock Text="Select Music App" Style="{StaticResource SectionHeader}"/>
+                <TextBlock Text="Only audio from the selected process is routed."
+                           Foreground="{StaticResource SubtextBrush}" FontSize="11"/>
+            </StackPanel>
+            <Button Content="Refresh"
+                    DockPanel.Dock="Right"
+                    HorizontalAlignment="Right"
+                    Command="{Binding RefreshProcessesCommand}"
+                    Style="{StaticResource GhostButton}"/>
+        </DockPanel>
 
         <!-- Process List -->
         <Border Grid.Row="2"
-                Background="{StaticResource SurfaceBrush}"
-                CornerRadius="8"
-                Padding="4"
+                Style="{StaticResource CardBorder}"
+                Padding="5"
                 Margin="0,0,0,12">
             <ListBox ItemsSource="{Binding Processes}"
                      SelectedItem="{Binding SelectedProcess}"
@@ -99,37 +240,49 @@
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Margin="4,4">
-                            <TextBlock Text="&#x266B; " Foreground="{StaticResource PrimaryBrush}" FontSize="14" VerticalAlignment="Center"/>
-                            <StackPanel>
-                                <TextBlock Text="{Binding ProcessName}" FontSize="13" FontWeight="Medium" Foreground="{StaticResource TextBrush}"/>
-                                <TextBlock FontSize="10" Foreground="{StaticResource SubtextBrush}">
+                        <Grid Margin="4,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="32" Height="32" CornerRadius="10" Background="#221DB954" Margin="0,0,10,0">
+                                <TextBlock Text="♪" Foreground="{StaticResource PrimaryBrush}" FontSize="16" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ProcessName}"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextBrush}"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock FontSize="10" Foreground="{StaticResource SubtextBrush}" TextTrimming="CharacterEllipsis">
                                     <Run Text="PID: "/><Run Text="{Binding ProcessId, Mode=OneWay}"/>
-                                    <Run Text=" | "/><Run Text="{Binding WindowTitle, Mode=OneWay}"/>
+                                    <Run Text="  •  "/><Run Text="{Binding WindowTitle, Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
-                        </StackPanel>
+                        </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Padding" Value="6,2"/>
                         <Setter Property="Margin" Value="2"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
                                     <Border x:Name="Bd"
                                             Background="Transparent"
-                                            CornerRadius="6"
+                                            CornerRadius="10"
                                             Padding="{TemplateBinding Padding}">
                                         <ContentPresenter/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="Bd" Property="Background" Value="#3D1DB954"/>
+                                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource SelectedBrush}"/>
                                         </Trigger>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="Bd" Property="Background" Value="#20FFFFFF"/>
+                                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBrush}"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -140,35 +293,54 @@
             </ListBox>
         </Border>
 
-        <!-- Device Selection -->
-        <StackPanel Grid.Row="3" Margin="0,0,0,12">
-            <TextBlock Text="Output to Virtual Cable"
-                       Style="{StaticResource SectionHeader}"/>
-            <ComboBox ItemsSource="{Binding OutputDevices}"
-                      SelectedItem="{Binding SelectedOutputDevice}"
-                      DisplayMemberPath="FriendlyName"
-                      FontSize="13"
-                      Padding="8,6"
-                      Background="{StaticResource SurfaceBrush}"
-                      Foreground="{StaticResource TextBrush}"
-                      BorderBrush="#40FFFFFF"
-                      BorderThickness="1"/>
-        </StackPanel>
+        <!-- Device and Gain Selection -->
+        <Border Grid.Row="3" Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Output to Virtual Cable" Style="{StaticResource SectionHeader}"/>
+                <ComboBox ItemsSource="{Binding OutputDevices}"
+                          SelectedItem="{Binding SelectedOutputDevice}"
+                          DisplayMemberPath="FriendlyName"
+                          Style="{StaticResource DarkComboBox}"/>
+
+                <TextBlock Text="Volume gain (+/- dB)"
+                           Style="{StaticResource SectionHeader}"
+                           Margin="0,12,0,6"/>
+                <DockPanel>
+                    <TextBox Text="{Binding GainDbText, UpdateSourceTrigger=PropertyChanged}"
+                             Width="84"
+                             Style="{StaticResource InputBox}"
+                             DockPanel.Dock="Left"/>
+                    <TextBlock Text="dB   0 = default, range -60 to +20"
+                               Style="{StaticResource TinyLabel}"
+                               Margin="8,0,0,0"/>
+                </DockPanel>
+                <TextBlock Text="{Binding GainValidationMessage}"
+                           Foreground="{StaticResource ErrorBrush}"
+                           FontSize="11"
+                           Margin="0,5,0,0"
+                           Visibility="{Binding HasGainValidationError, Converter={StaticResource BoolToVis}}"/>
+            </StackPanel>
+        </Border>
 
         <!-- Virtual Cable Warning -->
         <Border Grid.Row="4"
-                Background="#30FAB387"
-                CornerRadius="6"
-                Padding="10,8"
+                Background="{StaticResource WarningBackgroundBrush}"
+                BorderBrush="#55FAB387"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="12,9"
                 Margin="0,0,0,12"
                 Visibility="{Binding ShowVirtualCableWarning, Converter={StaticResource BoolToVis}}">
-            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource WarningBrush}" FontSize="12">
-                <Run FontWeight="SemiBold">No virtual cable detected.</Run>
-                <LineBreak/>
-                <Run>Install VB-CABLE from https://vb-audio.com/Cable/ then click Refresh.</Run>
-                <LineBreak/>
-                <Run>After install, select "CABLE Input" as the output device above.</Run>
-            </TextBlock>
+            <DockPanel>
+                <TextBlock Text="⚠" Foreground="{StaticResource WarningBrush}" FontSize="17" Margin="0,0,10,0" DockPanel.Dock="Left"/>
+                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource WarningBrush}" FontSize="12">
+                    <Run FontWeight="SemiBold">No virtual cable detected.</Run>
+                    <LineBreak/>
+                    <Run>Install VB-CABLE from https://vb-audio.com/Cable/ then click Refresh.</Run>
+                    <LineBreak/>
+                    <Run>After install, select &quot;CABLE Input&quot; as the output device above.</Run>
+                </TextBlock>
+            </DockPanel>
         </Border>
 
         <!-- Controls -->
@@ -178,46 +350,45 @@
                         Command="{Binding StartBridgeCommand}"
                         Style="{StaticResource ActionButton}"
                         Background="{StaticResource PrimaryBrush}"
-                        Foreground="White"
                         Margin="0,0,8,0"
                         Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVis}}"/>
                 <Button Content="STOP"
                         Command="{Binding StopBridgeCommand}"
                         Style="{StaticResource ActionButton}"
                         Background="{StaticResource ErrorBrush}"
-                        Foreground="White"
                         Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
             </StackPanel>
 
             <!-- Level Meters -->
-            <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <DockPanel Margin="0,0,0,4">
-                    <TextBlock Text="Capture:" Foreground="{StaticResource SubtextBrush}" FontSize="11" Width="55"/>
-                    <Border Background="#20FFFFFF" CornerRadius="3" Height="12" Width="120">
-                        <Border Background="{StaticResource PrimaryBrush}" CornerRadius="3" HorizontalAlignment="Left"
-                                Width="{Binding CaptureLevel, Converter={StaticResource LevelToWidth}}"/>
-                    </Border>
-                    <TextBlock Text="{Binding CaptureLevelDb}" Foreground="{StaticResource SubtextBrush}" FontSize="10" Margin="6,0,0,0" Width="55"/>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="Render:" Foreground="{StaticResource SubtextBrush}" FontSize="11" Width="55"/>
-                    <Border Background="#20FFFFFF" CornerRadius="3" Height="12" Width="120">
-                        <Border Background="#89B4FA" CornerRadius="3" HorizontalAlignment="Left"
-                                Width="{Binding RenderLevel, Converter={StaticResource LevelToWidth}}"/>
-                    </Border>
-                    <TextBlock Text="{Binding RenderLevelDb}" Foreground="{StaticResource SubtextBrush}" FontSize="10" Margin="6,0,0,0" Width="55"/>
-                </DockPanel>
-            </StackPanel>
+            <Border DockPanel.Dock="Right" Style="{StaticResource CardBorder}" Padding="10,8" HorizontalAlignment="Right">
+                <StackPanel VerticalAlignment="Center">
+                    <DockPanel Margin="0,0,0,5">
+                        <TextBlock Text="Capture" Style="{StaticResource TinyLabel}" Width="56"/>
+                        <Border Background="{StaticResource MeterTrackBrush}" CornerRadius="4" Height="14" Width="120">
+                            <Border Background="{StaticResource PrimaryBrush}" CornerRadius="4" HorizontalAlignment="Left"
+                                    Width="{Binding CaptureLevel, Converter={StaticResource LevelToWidth}}"/>
+                        </Border>
+                        <TextBlock Text="{Binding CaptureLevelDb}" Style="{StaticResource TinyLabel}" Margin="7,0,0,0" Width="55"/>
+                    </DockPanel>
+                    <DockPanel>
+                        <TextBlock Text="Render" Style="{StaticResource TinyLabel}" Width="56"/>
+                        <Border Background="{StaticResource MeterTrackBrush}" CornerRadius="4" Height="14" Width="120">
+                            <Border Background="{StaticResource RenderBrush}" CornerRadius="4" HorizontalAlignment="Left"
+                                    Width="{Binding RenderLevel, Converter={StaticResource LevelToWidth}}"/>
+                        </Border>
+                        <TextBlock Text="{Binding RenderLevelDb}" Style="{StaticResource TinyLabel}" Margin="7,0,0,0" Width="55"/>
+                    </DockPanel>
+                </StackPanel>
+            </Border>
         </DockPanel>
 
         <!-- Status Bar -->
         <Border Grid.Row="6"
-                Background="{StaticResource SurfaceBrush}"
-                CornerRadius="6"
-                Padding="12,8"
+                Style="{StaticResource CardBorder}"
+                Padding="12,9"
                 Margin="0,0,0,8">
             <DockPanel>
-                <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center">
+                <Ellipse Width="9" Height="9" Margin="0,0,9,0" VerticalAlignment="Center">
                     <Ellipse.Style>
                         <Style TargetType="Ellipse">
                             <Setter Property="Fill" Value="{StaticResource SubtextBrush}"/>
@@ -232,20 +403,26 @@
                 <TextBlock Text="{Binding StatusText}"
                            Foreground="{StaticResource TextBrush}"
                            FontSize="12"
-                           VerticalAlignment="Center"/>
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
             </DockPanel>
         </Border>
 
         <!-- Error Display -->
         <Border Grid.Row="7"
-                Background="#30F38BA8"
-                CornerRadius="6"
-                Padding="10,8"
+                Background="{StaticResource ErrorBackgroundBrush}"
+                BorderBrush="#55F38BA8"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="12,9"
                 Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-            <TextBlock Text="{Binding ErrorMessage}"
-                       Foreground="{StaticResource ErrorBrush}"
-                       FontSize="11"
-                       TextWrapping="Wrap"/>
+            <DockPanel>
+                <TextBlock Text="!" Foreground="{StaticResource ErrorBrush}" FontSize="15" FontWeight="Bold" Margin="0,0,10,0" DockPanel.Dock="Left"/>
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="{StaticResource ErrorBrush}"
+                           FontSize="11"
+                           TextWrapping="Wrap"/>
+            </DockPanel>
         </Border>
     </Grid>
 </Window>

@@ -7,8 +7,25 @@
 #include <cstring>
 #include <vector>
 #include <cmath>
+#include <algorithm>
 
 #pragma comment(lib, "avrt.lib")
+
+namespace {
+constexpr float MinGainDb = -60.0f;
+constexpr float MaxGainDb = 20.0f;
+
+void ApplyGainFloat32(BYTE* buffer, size_t bytes, float gain) {
+    if (!buffer || bytes == 0) return;
+    if (std::fabs(gain - 1.0f) < 0.000001f) return;
+
+    float* samples = reinterpret_cast<float*>(buffer);
+    size_t sampleCount = bytes / sizeof(float);
+    for (size_t i = 0; i < sampleCount; ++i) {
+        samples[i] = std::clamp(samples[i] * gain, -1.0f, 1.0f);
+    }
+}
+}
 
 WasapiRenderSink::WasapiRenderSink() {
     m_renderEvent = CreateEventW(nullptr, FALSE, FALSE, nullptr);
@@ -17,6 +34,13 @@ WasapiRenderSink::WasapiRenderSink() {
 WasapiRenderSink::~WasapiRenderSink() {
     Stop();
     if (m_renderEvent) CloseHandle(m_renderEvent);
+}
+
+void WasapiRenderSink::SetGainDb(float gainDb) {
+    if (!std::isfinite(gainDb)) gainDb = 0.0f;
+    gainDb = std::clamp(gainDb, MinGainDb, MaxGainDb);
+    float linear = std::pow(10.0f, gainDb / 20.0f);
+    m_gainLinear.store(linear, std::memory_order_release);
 }
 
 HRESULT WasapiRenderSink::Start(LPCWSTR deviceId, const WAVEFORMATEX* sourceFormat, RingBuffer* ringBuffer) {
@@ -138,6 +162,8 @@ void WasapiRenderSink::RenderThread() {
         }
 
         if (bytesRead > 0 && m_renderFormat.wBitsPerSample == 32) {
+            float gain = m_gainLinear.load(std::memory_order_acquire);
+            ApplyGainFloat32(renderBuffer, bytesRead, gain);
             size_t sampleCount = bytesRead / sizeof(float);
             float rms = AudioFormatConverter::CalculateRms(
                 reinterpret_cast<const float*>(renderBuffer), sampleCount);

@@ -18,5 +18,8 @@ internal static class NativeBridge
     public static extern int Bridge_GetLevels(out float captureRms, out float renderRms);
 
     [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
+    public static extern int Bridge_SetGainDb(float gainDb);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.StdCall)]
     public static extern int Bridge_GetState(out int state);
 }

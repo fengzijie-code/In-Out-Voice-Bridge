@@ -7,11 +7,14 @@
 #include <mutex>
 #include <memory>
 #include <cstdio>
+#include <cmath>
+#include <algorithm>
 
 static std::mutex g_mutex;
 static std::unique_ptr<ProcessLoopbackCapture> g_capture;
 static std::unique_ptr<WasapiRenderSink> g_render;
 static std::unique_ptr<RingBuffer> g_ringBuffer;
+static float g_gainDb = 0.0f;
 
 enum class BridgeState : int {
     Stopped = 0,
@@ -29,6 +32,14 @@ BOOL APIENTRY DllMain(HMODULE, DWORD reason, LPVOID) {
 }
 
 extern "C" {
+
+constexpr float MinGainDb = -60.0f;
+constexpr float MaxGainDb = 20.0f;
+
+static float NormalizeGainDb(float gainDb) {
+    if (!std::isfinite(gainDb)) return 0.0f;
+    return std::clamp(gainDb, MinGainDb, MaxGainDb);
+}
 
 static void BridgeLog(const wchar_t* msg, HRESULT hr = S_OK) {
     wchar_t buf[512];
@@ -50,6 +61,7 @@ __declspec(dllexport) HRESULT __stdcall Bridge_Start(DWORD targetPid, LPCWSTR re
     g_ringBuffer = std::make_unique<RingBuffer>(BUFFER_SIZE);
     g_capture = std::make_unique<ProcessLoopbackCapture>();
     g_render = std::make_unique<WasapiRenderSink>();
+    g_render->SetGainDb(g_gainDb);
 
     HRESULT hr = g_capture->Start(targetPid, g_ringBuffer.get());
     BridgeLog(L"capture->Start returned", hr);
@@ -88,6 +100,17 @@ __declspec(dllexport) HRESULT __stdcall Bridge_Stop() {
     g_render.reset();
     g_ringBuffer.reset();
     g_state = BridgeState::Stopped;
+    return S_OK;
+}
+
+__declspec(dllexport) HRESULT __stdcall Bridge_SetGainDb(float gainDb) {
+    std::lock_guard<std::mutex> lock(g_mutex);
+
+    g_gainDb = NormalizeGainDb(gainDb);
+    if (g_render) {
+        g_render->SetGainDb(g_gainDb);
+    }
+    BridgeLog(L"Bridge_SetGainDb", S_OK);
     return S_OK;
 }
 

@@ -22,6 +22,22 @@ public class BridgeController : IDisposable
 
     public BridgeState CurrentState { get; private set; } = BridgeState.Stopped;
 
+    public bool SetGainDb(double gainDb)
+    {
+        if (double.IsNaN(gainDb) || double.IsInfinity(gainDb))
+            return false;
+
+        double clamped = Math.Clamp(gainDb, -60.0, 20.0);
+        int hr = NativeBridge.Bridge_SetGainDb((float)clamped);
+        if (hr < 0)
+        {
+            ErrorOccurred?.Invoke($"Failed to set gain (HRESULT: 0x{hr:X8}).");
+            return false;
+        }
+
+        return true;
+    }
+
     public async Task<bool> StartAsync(uint processId, string renderDeviceId)
     {
         if (CurrentState == BridgeState.Running)
