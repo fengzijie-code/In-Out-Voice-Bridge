@@ -77,7 +77,7 @@
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Padding" Value="10,7"/>
             <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Foreground" Value="Black"/>
             <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
