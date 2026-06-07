@@ -9,6 +9,7 @@
     <Platforms>x64;AnyCPU</Platforms>
     <PlatformTarget>x64</PlatformTarget>
 
+    <Version>1.2.0</Version>
     <RootNamespace>InOutVoiceBridge.App</RootNamespace>
     <AssemblyName>InOutVoiceBridge</AssemblyName>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
