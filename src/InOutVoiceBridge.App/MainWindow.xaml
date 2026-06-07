@@ -334,8 +334,7 @@
                               Foreground="{StaticResource TextBrush}"
                               DockPanel.Dock="Right"
                               HorizontalAlignment="Right"
-                              VerticalAlignment="Center"
-                              IsEnabled="{Binding IsRunning}"/>
+                              VerticalAlignment="Center"/>
                 </DockPanel>
 
                 <TextBlock Text="Select your microphone to mix voice with music"

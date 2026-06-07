@@ -145,24 +145,28 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         if (value)
         {
-            if (SelectedMicDevice == null || !IsRunning)
+            if (SelectedMicDevice == null)
             {
                 IsMicEnabled = false;
                 return;
             }
-            bool success = _bridge.StartMic(SelectedMicDevice.Id);
-            if (!success)
+            if (IsRunning)
             {
-                IsMicEnabled = false;
-            }
-            else
-            {
-                _bridge.SetMicGainDb(_lastValidMicGainDb);
+                bool success = _bridge.StartMic(SelectedMicDevice.Id);
+                if (!success)
+                {
+                    IsMicEnabled = false;
+                }
+                else
+                {
+                    _bridge.SetMicGainDb(_lastValidMicGainDb);
+                }
             }
         }
         else
         {
-            _bridge.StopMic();
+            if (IsRunning)
+                _bridge.StopMic();
         }
     }
 
@@ -248,6 +252,15 @@ public partial class MainViewModel : ObservableObject, IDisposable
         {
             _bridge.SetGainDb(_lastValidGainDb);
             StatusText = $"Bridging: {SelectedProcess.ProcessName} -> {SelectedOutputDevice.FriendlyName}";
+
+            if (IsMicEnabled && SelectedMicDevice != null)
+            {
+                bool micOk = _bridge.StartMic(SelectedMicDevice.Id);
+                if (micOk)
+                    _bridge.SetMicGainDb(_lastValidMicGainDb);
+                else
+                    IsMicEnabled = false;
+            }
         }
     }
 
@@ -286,7 +299,6 @@ public partial class MainViewModel : ObservableObject, IDisposable
             RenderLevelDb = "-inf dB";
             MicLevel = 0;
             MicLevelDb = "-inf dB";
-            IsMicEnabled = false;
         }
     }
 
